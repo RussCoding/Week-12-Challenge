@@ -69,8 +69,71 @@ var runApp = function() {
                     if(err) throw err;
                     console.log('Successfully added the department!');
                     runApp();
-                })
+                });
             })
         }
+        else if(answers.prompt === 'Add a Role') {
+            //Department list is needed so query for whole list
+            db.query(`SELECT * FROM departments`, (err, result) => {
+                if(err) throw err; //result will be the array of departments
+                //need name of role, salary, and department id
+                inquirer.prompt([
+                    {
+                        type: 'input',
+                        name: 'role',
+                        message: 'What is the role?',
+                        validate: input => {
+                            if (input) {
+                                return true;
+                            } else {
+                                console.log('Please enter a name for the role!');
+                                return false;
+                            }
+                        }
+                    },
+                    {
+                        type: 'input',
+                        name: 'salary',
+                        message: 'What is the salary of the role?',
+                        validate: input => {
+                            if (input) {
+                                return true;
+                            } else {
+                                console.log('Please Enter a proper salary!');
+                                return false;
+                            }
+                        }
+                    },
+                    {
+                        type: 'list',
+                        name: 'department',
+                        message: 'Which department does it belong to?',
+                        choices: () => {
+                            var departmentArr = [];
+                            //goes through result of query for departments and adds only the names to array
+                            for (var i = 0; i < result.length; i++) {
+                                array.push(result[i].name);
+                            }
+                            return departmentArr;
+                        }
+                    }
+
+                ]).then((answers) => {
+                    for (var i = 0; i < result.length; i++) {
+                        if (answers.department === result[i].name) {
+                            var department_id = result[i].id;
+                        }
+                    }
+
+                    db.query (`INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)`, [answers.role, answers.salary, department_id], (err, result) => {
+                        if(err) throw err;
+                        console.log('Successfully add new role');
+                        runApp();
+                    });
+                })
+            });
+        }
+        else if ()
+
     })
 };
