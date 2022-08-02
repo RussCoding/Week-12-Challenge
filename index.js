@@ -7,7 +7,8 @@ db.connect  (err => {
 });
 
 var runApp = function() {
-    inquirer.prompt({
+    inquirer.prompt
+    ({
         type: 'list',
         name: 'menu',
         message: 'Main Menu',
@@ -21,6 +22,7 @@ var runApp = function() {
             'Change Employee Role', 
             'Exit'
         ]}).then((answers) => {
+        //view all departments
         if (answers.prompt === 'View all Departments') {
             db.query('SELECT * FROM departments', (err, result) => {
                 if (err) throw err;
@@ -29,6 +31,7 @@ var runApp = function() {
                 runApp();
             });
         }
+        //view all roles
         else if (answers.prompt === 'View all Roles') {
             db.query('SELECT * FROM roles', (err, result) => {
                 if (err) throw err;
@@ -37,6 +40,7 @@ var runApp = function() {
                 runApp();
             });
         }
+        //view all employees
         else if (answers.prompt === 'View all Employees') {
             db.query('SELECT * FROM employees', (err, result) => {
                 if (err) throw err;
@@ -44,6 +48,29 @@ var runApp = function() {
                 console.table(result);
                 runApp();
             });
+        }
+        //add a department
+        else if (answers.prompt === 'Add a Department') {
+            inquirer.prompt({
+                type: 'input',
+                name: 'department',
+                message: 'What is the new departments name?',
+                validate: input => {
+                    if(input) {
+                        return true;
+                    } 
+                    else {
+                        console.log('Please enter a name');
+                        return false;
+                    }
+                }
+            }).then((answers) => {
+                db.query(`INSERT INTO department (name) VALUES (?)`, [answers.department], (err, result) => {
+                    if(err) throw err;
+                    console.log('Successfully added the department!');
+                    runApp();
+                })
+            })
         }
     })
 };
