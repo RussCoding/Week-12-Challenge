@@ -65,7 +65,7 @@ var runApp = function() {
                     }
                 }
             }).then((answers) => {
-                db.query(`INSERT INTO department (name) VALUES (?)`, [answers.department], (err, result) => {
+                db.query(`INSERT INTO departments (name) VALUES (?)`, [answers.department], (err, result) => {
                     if(err) throw err;
                     console.log('Successfully added the department!');
                     runApp();
@@ -189,7 +189,7 @@ var runApp = function() {
                             var role_id = result[i].id;
                         }
                     }
-                    db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`, [answers.first_name, answers.last_name, role_id, answers.manager], (err, result) => {
+                    db.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`, [answers.first_name, answers.last_name, role_id, answers.manager], (err, result) => {
                         if (err) throw err;
                         console.log('Successfully added new employee');
                         runApp();
@@ -198,8 +198,48 @@ var runApp = function() {
             });
         }
         else if (answers.prompt === 'Change Employee Role') {
-            
-        }
+            db.query(`SELECT * FROM roles`, (err, result) => {
+                if(err) throw err; 
+                inquirer.prompt([
+                    {
+                        type: 'input',
+                        name: 'employee',
+                        message: 'Enter the id number of the employee you would like to promote',
+                        validate: input => {
+                            if (input) {
+                                return true;
+                            } else {
+                                console.log('Enter an id for the employee');
+                                return false;
+                            }
+                        }
+                    },
+                    {
+                        type: 'list',
+                        name: 'role',
+                        message: 'What is the id number of the employees new role?',
+                        choices: () => {
+                            var array = [];
+                            for (var i = 0; i < result.length; i++) {
+                                array.push(i + ': ' + result[i].title);
+                            }
+                            return array;
+                        }
+                    }
 
+                ]).then((answers) => {
+                    db.query(`UPDATE employees SET ? WHERE ?`, [{role_id: answers.role}, {id: answers.employee}], (err, result) => {
+                        if (err) throw err;
+                        console.log('Updated employees role');
+                        runApp();
+                    });
+
+                })
+            });
+        }
+        else if (answers.prompt === 'Exit') {
+            db.end();
+            console.log("Thank you for using employee tracker");
+        }
     })
 };
