@@ -121,6 +121,7 @@ var runApp = function() {
                 ]).then((answers) => {
                     for (var i = 0; i < result.length; i++) {
                         if (answers.department === result[i].name) {
+                            //saves department id as the id of department from array of first query
                             var department_id = result[i].id;
                         }
                     }
@@ -133,7 +134,72 @@ var runApp = function() {
                 })
             });
         }
-        else if ()
+        // Add an employee
+        else if (answers.prompt === 'Add an Employee') {
+            db.query(`SELECT * FROM roles`, (err, result) => {
+                if(err) throw err;
+                inquirer.prompt([
+                    {
+                        type: 'input',
+                        name: 'firstName',
+                        message: 'What is the employees first name?',
+                        validate: input => {
+                            if (input) {
+                                return true;
+                            } else {
+                                console.log('Please Add A First Name!');
+                                return false;
+                            }
+                        }
+                    },
+                    {
+                        // Adding Employee Last Name
+                        type: 'input',
+                        name: 'lastName',
+                        message: 'Enter the first name',
+                        validate: input => {
+                            if (input) {
+                                return true;
+                            } else {
+                                console.log('Enter the last name');
+                                return false;
+                            }
+                        }
+                    },
+                    {
+                        type: 'list',
+                        name: 'role',
+                        message: 'What is the employees position?',
+                        choices: () => {
+                            var array = [];
+                            for (var i = 0; i < result.length; i++) {
+                                array.push(result[i].title);
+                            }
+                            return array;
+                        }
+                    },
+                    {
+                        type: 'input',
+                        name: 'manager',
+                        message: 'What is the id number of the employees manager',
+                    }
+                ]).then((answers) => {
+                    for (var i = 0; i<result.length; i++) {
+                        if(answers.role === result[i].title){
+                            var role_id = result[i].id;
+                        }
+                    }
+                    db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`, [answers.first_name, answers.last_name, role_id, answers.manager], (err, result) => {
+                        if (err) throw err;
+                        console.log('Successfully added new employee');
+                        runApp();
+                    });
+                })
+            });
+        }
+        else if (answers.prompt === 'Change Employee Role') {
+            
+        }
 
     })
 };
