@@ -1,6 +1,5 @@
-const db = require('./db/connection');
 const inquirer = require('inquirer');
-
+const db = require('./db/connection');
 db.connect  (err => {
     if (err) throw err;
     runApp();
@@ -8,9 +7,9 @@ db.connect  (err => {
 
 var runApp = function() {
     inquirer.prompt
-    ({
+    ([{
         type: 'list',
-        name: 'menu',
+        name: 'prompt',
         message: 'Main Menu',
         choices: [
             'View all Departments', 
@@ -21,7 +20,8 @@ var runApp = function() {
             'Add an Employee', 
             'Change Employee Role', 
             'Exit'
-        ]}).then((answers) => {
+        ]
+    }]).then((answers) => {
         //view all departments
         if (answers.prompt === 'View all Departments') {
             db.query('SELECT * FROM departments', (err, result) => {
@@ -105,30 +105,23 @@ var runApp = function() {
                         }
                     },
                     {
-                        type: 'list',
+                        type: 'input',
                         name: 'department',
                         message: 'Which department does it belong to?',
-                        choices: () => {
-                            var departmentArr = [];
-                            //goes through result of query for departments and adds only the names to array
-                            for (var i = 0; i < result.length; i++) {
-                                array.push(result[i].name);
+                        cvalidate: input => {
+                            if (input) {
+                                return true;
+                            } else {
+                                console.log('Please Enter a department id');
+                                return false;
                             }
-                            return departmentArr;
                         }
                     }
 
                 ]).then((answers) => {
-                    for (var i = 0; i < result.length; i++) {
-                        if (answers.department === result[i].name) {
-                            //saves department id as the id of department from array of first query
-                            var department_id = result[i].id;
-                        }
-                    }
-
-                    db.query (`INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)`, [answers.role, answers.salary, department_id], (err, result) => {
+                    db.query (`INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)`, [answers.role, answers.salary, answers.department], (err, result) => {
                         if(err) throw err;
-                        console.log('Successfully add new role');
+                        console.log('Successfully added a new role');
                         runApp();
                     });
                 })
@@ -156,7 +149,7 @@ var runApp = function() {
                         // Adding Employee Last Name
                         type: 'input',
                         name: 'lastName',
-                        message: 'Enter the first name',
+                        message: 'Enter the last name',
                         validate: input => {
                             if (input) {
                                 return true;
@@ -184,12 +177,13 @@ var runApp = function() {
                         message: 'What is the id number of the employees manager',
                     }
                 ]).then((answers) => {
+                    var role_id;
                     for (var i = 0; i<result.length; i++) {
                         if(answers.role === result[i].title){
-                            var role_id = result[i].id;
+                            role_id = i;
                         }
                     }
-                    db.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`, [answers.first_name, answers.last_name, role_id, answers.manager], (err, result) => {
+                    db.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`, [answers.firstName, answers.lastName, role_id, answers.manager], (err, result) => {
                         if (err) throw err;
                         console.log('Successfully added new employee');
                         runApp();
@@ -217,18 +211,25 @@ var runApp = function() {
                     {
                         type: 'list',
                         name: 'role',
-                        message: 'What is the id number of the employees new role?',
+                        message: 'What is the the employees new role?',
                         choices: () => {
                             var array = [];
                             for (var i = 0; i < result.length; i++) {
-                                array.push(i + ': ' + result[i].title);
+                                array.push(result[i].title);
                             }
                             return array;
                         }
                     }
 
                 ]).then((answers) => {
-                    db.query(`UPDATE employees SET ? WHERE ?`, [{role_id: answers.role}, {id: answers.employee}], (err, result) => {
+                    var role_id;
+                    for(var i = 0; i< result.length; i++){
+                        if (result[i].title === answers.role)
+                        {
+                            role_id = i+1;
+                        }
+                    }
+                    db.query(`UPDATE employees SET ? WHERE ?`, [{role_id: role_id}, {id: answers.employee}], (err, result) => {
                         if (err) throw err;
                         console.log('Updated employees role');
                         runApp();
